@@ -4,56 +4,66 @@
 <head>
     <title>SJACS 即時電子報告版</title>
     <meta charset="utf-8">
+    <!-- Viewport meta tag for responsive design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts: Noto Sans HK for Chinese, Oswald for English/Numbers -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@100..900&family=Oswald:wght@200..700&display=swap"
         rel="stylesheet">
     <style>
+        /* Basic body styling for full-page background and font */
         body {
             margin: 0;
             font-family: "Noto Sans HK", sans-serif;
             color: white;
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            transition: background-image 1.5s ease-in-out;
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center center; /* Center the background image */
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-attachment: fixed; /* Keep background fixed during scroll */
+            transition: background-image 1.5s ease-in-out; /* Smooth transition for background image changes */
         }
 
+        /* Keyframe animation for fade-in effect */
         @keyframes fadeIn {
             from {
                 opacity: 0;
             }
-
             to {
                 opacity: 1;
             }
         }
 
+        /* Container for the main announcement slides, centers content vertically and horizontally */
         .container {
-            min-height: 100vh;
+            min-height: 100vh; /* Full viewport height */
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
         }
 
+        /* Styling for individual announcement slides */
         .slide {
             text-align: center;
-            text-shadow: 2px 2px 4px #000000;
+            text-shadow: 2px 2px 4px #000000; /* Text shadow for readability */
             padding: 20px;
-            font-size: 5.5vw;
+            font-size: 5.5vw; /* Responsive font size based on viewport width */
             line-height: 1.5;
-            opacity: 0;
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-            transform: scale(0.95);
-            transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+            opacity: 0; /* Initially hidden */
+            position: absolute; /* Positioned absolutely within the container */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+            border-radius: 10px; /* Rounded corners */
+            transform: scale(0.95); /* Slightly scaled down initially for transition effect */
+            transition: opacity 1s ease-in-out, transform 1s ease-in-out; /* Smooth transitions for opacity and scale */
+            max-width: 90%; /* Ensure slide doesn't overflow on smaller screens */
+            box-sizing: border-box; /* Include padding in width calculation */
         }
 
+        /* Active slide state for visibility and full scale */
         .slide.active {
             opacity: 1;
             transform: scale(1);
         }
 
+        /* Container for clock and counter, fixed at the top */
         .info-container {
             position: fixed;
             top: 0;
@@ -61,22 +71,148 @@
             right: 0;
             padding: 20px;
             display: flex;
-            justify-content: space-between;
-            background: rgba(0, 0, 0, 0.1);
+            justify-content: space-between; /* Space out clock and counter */
+            background: rgba(0, 0, 0, 0.1); /* Slightly transparent background */
+            z-index: 1000; /* Ensure it's above other content */
         }
 
+        /* Styling for the clock display */
         .clock {
             font-size: 3rem;
             text-shadow: 2px 2px 2px #000000;
             font-family: "Oswald", serif;
             font-optical-sizing: auto;
-            font-weight: <weight>; /* This should be a numerical value like 400 or a range like 200..700 */
+            font-weight: 500; /* A specific weight from the Oswald font range */
         }
 
+        /* Styling for the slide counter */
         .counter {
             font-size: 1.5rem;
             text-shadow: 2px 2px 2px #000000;
             font-family: "Oswald", serif;
+        }
+
+        /* Styling for the Bus ETA modal */
+        #buseta {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9); /* Slightly more opaque white background */
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%; /* Responsive width */
+            max-width: 1200px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3); /* Stronger shadow */
+            z-index: 2000; /* Ensure it's on top */
+            display: none; /* Hidden by default */
+            box-sizing: border-box;
+        }
+
+        /* Close button for the Bus ETA modal */
+        #buseta button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 8px 15px; /* Larger padding for easier tapping */
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        #buseta button:hover {
+            background-color: #cc0000;
+        }
+
+        /* Container for the two bus ETA iframes */
+        #buseta > div {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        /* Styling for individual bus ETA sections within the modal */
+        #buseta > div > div {
+            width: calc(50% - 10px); /* Two columns with gap */
+            box-sizing: border-box;
+        }
+
+        /* Responsive adjustments for bus ETA sections */
+        @media (max-width: 768px) {
+            #buseta > div > div {
+                width: 100%; /* Single column on small screens */
+            }
+        }
+
+        #buseta h3 {
+            text-align: center;
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.8rem;
+        }
+
+        #buseta iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd; /* Subtle border for iframes */
+            border-radius: 5px;
+        }
+
+        /* Button to toggle Bus ETA modal */
+        .toggle-buseta-button {
+            position: fixed;
+            bottom: 50px;
+            right: 10px;
+            padding: 10px 15px;
+            opacity: 0.7; /* Slightly transparent */
+            cursor: pointer;
+            background-color: #007bff; /* Blue button */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease, background-color 0.3s ease;
+            z-index: 1500;
+        }
+
+        .toggle-buseta-button:hover {
+            opacity: 1;
+            background-color: #0056b3;
+        }
+
+        /* RSS news ticker at the bottom */
+        #rss-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6); /* Darker background for RSS */
+            color: white;
+            padding: 10px;
+            height: 30px;
+            overflow: hidden;
+            font-size: 1.2rem; /* Slightly larger font */
+            display: block;
+            white-space: nowrap; /* Keep content on one line for marquee */
+            z-index: 1000;
+        }
+
+        /* Marquee for scrolling RSS content */
+        #rss-content {
+            display: inline-block; /* Essential for marquee behavior */
+            padding-left: 100%; /* Start off-screen to the right */
+            animation: marquee 60s linear infinite; /* Adjust duration for speed */
+        }
+
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
         }
     </style>
 </head>
@@ -88,56 +224,60 @@
         <div class="counter" id="counter"></div>
     </div>
 
-    <div id="buseta"
-        style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 10px; width: 80%; max-width: 1200px; box-shadow: 0 0 10px rgba(0,0,0,0.2);">
-        <button onclick="closeBuseta()"
-            style="position: absolute; top: 10px; right: 10px; padding: 5px 10px; background: #ff4444; color: white; border: none; border-radius: 5px; cursor: pointer;">X</button>
-        <div style="display: flex; justify-content: space-between; gap: 20px;">
-            <div style="width: 50%;">
-                <h3 style="text-align: center; margin: 0 0 10px 0; color: #333;">聖言巴士站</h3>
-                <iframe src="busetaSingYin.html" style="width: 100%; height: 400px; border: none;"></iframe>
+    <!-- Bus ETA Modal -->
+    <div id="buseta" style="display: none;">
+        <button onclick="closeBuseta()">X</button>
+        <div>
+            <div>
+                <h3>聖言巴士站</h3>
+                <iframe src="busetaSingYin.html"></iframe>
             </div>
-            <div style="width: 50%;">
-                <h3 style="text-align: center; margin: 0 0 10px 0; color: #333;">白虹樓巴士站</h3>
-                <iframe src="busetaChoiHung.html" style="width: 100%; height: 400px; border: none;"></iframe>
+            <div>
+                <h3>白虹樓巴士站</h3>
+                <iframe src="busetaChoiHung.html"></iframe>
             </div>
         </div>
     </div>
 
-    <button onclick="toggleBuseta()"
-        style="position: fixed; bottom: 50px; right: 10px; padding: 5px; opacity: 0.3; cursor: pointer;">Show Bus
-        ETA</button>
+    <!-- Button to manually toggle Bus ETA modal -->
+    <button onclick="toggleBuseta()" class="toggle-buseta-button">Show Bus ETA</button>
 
     <script>
+        // Array of background image URLs. Replace these with your desired image links.
+        // Ensure these URLs are publicly accessible.
         const BACKGROUND_IMAGES = [
-            'YOUR_BACKGROUND_IMAGE_URL_1.jpg',
-            'YOUR_BACKGROUND_IMAGE_URL_2.png',
-            'YOUR_BACKGROUND_IMAGE_URL_3.jpeg',
-            'YOUR_BACKGROUND_IMAGE_URL_4.gif'
-            // Add more image URLs here, or remove if not needed
+            'https://placehold.co/1920x1080/007bff/ffffff?text=SJACS+Image+1', // Placeholder image 1
+            'https://placehold.co/1920x1080/28a745/ffffff?text=SJACS+Image+2', // Placeholder image 2
+            'https://placehold.co/1920x1080/ffc107/000000?text=SJACS+Image+3', // Placeholder image 3
+            'https://placehold.co/1920x1080/dc3545/ffffff?text=SJACS+Image+4'  // Placeholder image 4
+            // Add more image URLs here, or remove if not needed.
+            // Example: 'https://your-domain.com/path/to/your/image.jpg'
         ];
 
         let currentBgIndex = 0;
 
+        // Function to rotate background images
         function rotateBackground() {
             currentBgIndex = (currentBgIndex + 1) % BACKGROUND_IMAGES.length;
             document.body.style.backgroundImage = `url('${BACKGROUND_IMAGES[currentBgIndex]}')`;
         }
 
-        // Set initial background
+        // Set initial background image and start rotation interval
         document.body.style.backgroundImage = `url('${BACKGROUND_IMAGES[0]}')`;
-        // Start rotation every 16 seconds
-        setInterval(rotateBackground, 16000);
+        setInterval(rotateBackground, 16000); // Rotate every 16 seconds
 
+        // Function to toggle the visibility of the bus ETA modal
         function toggleBuseta() {
             const buseta = document.getElementById('buseta');
-            buseta.style.display = buseta.style.display === 'none' ? 'block' : 'none';
+            buseta.style.display = buseta.style.display === 'none' ? 'flex' : 'none'; // Use 'flex' for display
         }
 
+        // Function to close the bus ETA modal
         function closeBuseta() {
             document.getElementById('buseta').style.display = 'none';
         }
 
+        // Function to check current time and display bus ETA modal if within specified hours
         function checkBusetaTime() {
             const now = new Date();
             const currentHour = now.getHours();
@@ -145,27 +285,33 @@
             const buseta = document.getElementById('buseta');
             const currentTime = currentHour * 100 + currentMinutes;
 
-            // Display buseta between 15:45 and 22:00
+            // Display buseta between 15:45 (3:45 PM) and 22:00 (10:00 PM)
             if (currentTime >= 1545 && currentTime < 2200) {
-                buseta.style.display = 'block';
+                buseta.style.display = 'flex'; // Use 'flex' for display
             } else {
                 buseta.style.display = 'none';
             }
         }
 
-        // Check time every minute
+        // Check time every minute for bus ETA modal visibility
         setInterval(checkBusetaTime, 60000);
-        // Initial check
+        // Initial check on page load
         checkBusetaTime();
 
         // **IMPORTANT: Replace this with your Google Sheet's PUBLISHED CSV link**
-        // To get this link: Go to your Google Sheet -> File -> Share -> Publish to web -> Link -> CSV -> Publish
-        const GOOGLE_SHEET_CSV_URL = 'YOUR_GOOGLE_SHEET_PUBLISHED_CSV_LINK_HERE'; 
+        // To get this link:
+        // 1. Open your Google Sheet.
+        // 2. Go to File -> Share -> Publish to web.
+        // 3. In the "Publish to web" dialog, select the sheet you want to publish.
+        // 4. Choose "Comma-separated values (.csv)" from the dropdown.
+        // 5. Click "Publish".
+        // 6. Copy the generated URL and paste it here.
+        const GOOGLE_SHEET_CSV_URL = 'YOUR_GOOGLE_SHEET_PUBLISHED_CSV_LINK_HERE';
 
         let currentSlide = 0;
         let slides = [];
 
-        // Clear old intervals when setting new ones to prevent multiple intervals running
+        // Helper function to clear old intervals when setting new ones, preventing multiple intervals running
         function setIntervalWithCleanup(callback, delay) {
             const oldInterval = window[callback.name + 'Interval'];
             if (oldInterval) clearInterval(oldInterval);
@@ -173,18 +319,21 @@
             return window[callback.name + 'Interval'];
         }
 
+        // Function to load and update announcement slides from Google Sheet
         async function loadAndUpdateSlides() {
             try {
                 const response = await fetch(GOOGLE_SHEET_CSV_URL);
                 const data = await response.text();
-                const rows = data.split('\n').slice(1); // Skip header row
+                const rows = data.split('\n').slice(1); // Skip the header row
                 const now = new Date();
+                // Format today's date to match the Google Sheet's date format (e.g., "DD/MM/YYYY")
                 const today = now.toLocaleDateString('en-HK', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
                 });
 
+                // Filter data to only include announcements for today
                 const filteredData = rows.filter(row => {
                     const columns = row.split(',');
                     // Assuming date is in column 5 (index 4) and needs to be cleaned of quotes
@@ -192,49 +341,52 @@
                 });
 
                 const container = document.getElementById('container');
-                container.innerHTML = ''; // Clear existing slides
+                container.innerHTML = ''; // Clear existing slides before adding new ones
 
+                // If no announcements for today, display a default message
                 if (filteredData.length === 0) {
                     container.innerHTML = '<div class="slide active">今日無待顯示公告</div>';
-                    // Clear any existing slide rotation interval if no slides
-                    clearInterval(window.rotateSlidesInterval);
+                    clearInterval(window.rotateSlidesInterval); // Stop rotation if no slides
                     document.getElementById('counter').textContent = `0 of 0`;
                     return;
                 }
 
+                // Create slide elements from filtered data
                 slides = filteredData.map(row => {
                     const columns = row.split(',');
                     const div = document.createElement('div');
                     div.className = 'slide';
                     // Assuming content is in columns 2, 3, 4 (indices 1, 2, 3)
+                    // Clean quotes and join with line breaks for display
                     div.innerHTML = [columns[1], columns[2], columns[3]].map(i => i ? i.replace(/"/g, '') : '').join('<br>');
                     container.appendChild(div);
                     return div;
                 });
 
                 currentSlide = 0;
+                // Activate the first slide after a short delay for visual effect
                 setTimeout(() => {
                     slides[0].classList.add('active');
                     document.getElementById('counter').textContent = `1 of ${slides.length}`;
-                }, 1200); // Allow for initial fade-in
+                }, 1200);
 
                 // Restart slide rotation interval after loading new slides
-                setIntervalWithCleanup(rotateSlides, 8000);
+                setIntervalWithCleanup(rotateSlides, 8000); // Rotate slides every 8 seconds
 
             } catch (error) {
                 console.error('Data loading failed:', error);
                 const container = document.getElementById('container');
-                container.innerHTML = '<div class="slide active">載入失敗</div>';
+                container.innerHTML = '<div class="slide active">載入失敗</div>'; // Display error message
                 clearInterval(window.rotateSlidesInterval); // Stop rotation on error
                 document.getElementById('counter').textContent = `0 of 0`;
             }
         }
 
+        // Function to rotate through the announcement slides
         async function rotateSlides() {
             if (slides.length <= 1) {
-                // If only one or no slides, keep it displayed and don't rotate
-                // If there are no slides, loadAndUpdateSlides should have handled it.
-                // If there's 1 slide, just ensure it's active and counter is correct.
+                // If only one or no slides, no need to rotate.
+                // Ensure the single slide is active and counter is correct.
                 if (slides.length === 1 && !slides[0].classList.contains('active')) {
                     slides[0].classList.add('active');
                     document.getElementById('counter').textContent = `1 of 1`;
@@ -242,20 +394,19 @@
                 return;
             }
 
-            // Remove active class from current slide with transition
+            // Remove active class from current slide for fade-out effect
             const currentElement = slides[currentSlide];
-            if (currentElement) { // Ensure element exists before trying to manipulate
+            if (currentElement) {
                 currentElement.classList.remove('active');
             }
 
-
-            // Wait for transition to complete
+            // Wait for the fade-out transition to complete
             await new Promise(resolve => setTimeout(resolve, 1200));
 
-            // Check if it's the last slide
+            // Check if it's the last slide in the current set
             const isLastSlide = currentSlide === slides.length - 1;
             if (isLastSlide) {
-                // If it's the last slide, wait a bit longer, then reload all slides
+                // If it's the last slide, wait a bit longer, then re-fetch and re-render all slides
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 const container = document.getElementById('container');
                 container.innerHTML = ''; // Clear all slides before reloading
@@ -263,12 +414,13 @@
                 return; // Exit to let new slides initialize and set their own interval
             }
 
-            // Move to next slide
+            // Move to the next slide
             currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
+            slides[currentSlide].classList.add('active'); // Activate the next slide
             document.getElementById('counter').textContent = `${currentSlide + 1} of ${slides.length}`;
         }
 
+        // Function to update the real-time clock display
         function updateClock() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-GB', {
@@ -285,15 +437,17 @@
             document.getElementById('clock').textContent = `${timeStr}, ${dateStr} `;
         }
 
+        // Initialize the application: load slides, start clock and news updates
         async function initialize() {
             await loadAndUpdateSlides();
-            setIntervalWithCleanup(updateClock, 1000);
+            setIntervalWithCleanup(updateClock, 1000); // Update clock every second
             updateClock(); // Initial clock display
         }
 
+        // Function to fetch and display RSS news from RTHK
         async function fetchRSSNews() {
             try {
-                // Using AllOrigins as a CORS proxy for the RSS feed
+                // Using AllOrigins as a CORS proxy to bypass cross-origin restrictions for the RSS feed
                 const proxyUrl = 'https://api.allorigins.win/raw?url=';
                 const rssUrl = 'https://rthk.hk/rthk/news/rss/c_expressnews_clocal.xml';
                 const response = await fetch(proxyUrl + encodeURIComponent(rssUrl));
@@ -302,30 +456,39 @@
                 const xmlDoc = parser.parseFromString(text, 'text/xml');
                 const items = xmlDoc.getElementsByTagName('item');
 
-                let newsText = '香港電台本地新聞：';
+                // Initial religious quote followed by RTHK local news
+                let newsText = '望德不叫人蒙羞，因為天主的愛，藉著所賜與我們的聖神，已傾注在我們心中了。——羅馬書5:5 || 香港電台本地新聞：';
                 for (let i = 0; i < items.length; i++) {
                     const title = items[i].getElementsByTagName('title')[0].textContent;
-                    newsText += title + ' || ';
+                    newsText += title + ' || '; // Append each news title
                 }
                 document.getElementById('rss-content').textContent = newsText;
             } catch (error) {
                 console.error('Error fetching RSS:', error);
-                document.getElementById('rss-content').textContent = '未能載入新聞。'; // Display error message
+                document.getElementById('rss-content').textContent = '未能載入新聞。'; // Display error message on failure
             }
         }
 
+        // Start initialization and fetch news on page load
         initialize();
         fetchRSSNews();
         // Update RSS news every 5 minutes (300000 ms)
         setInterval(fetchRSSNews, 300000);
 
-        // Auto refresh page every 15 minutes (900000 milliseconds)
+        // Auto refresh the entire page every 15 minutes (900000 milliseconds)
+        // This helps in clearing cache and ensuring fresh data/resources.
         setIntervalWithCleanup(() => {
             window.location.reload();
         }, 900000);
     </script>
-    <div id="rss-container"
-        style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: white; padding: 10px; height: 30px; overflow: hidden; font-size: 20px; display: block;">
+    <!-- Optional Debug Data Display (uncomment to enable) -->
+    <!--
+    <div id="debug"
+        style="position: fixed; bottom: 50px; left: 0; right: 0; background: rgba(0,0,0,0.5); color: white; font-size: 10px; padding: 10px; max-height: 200px; overflow-y: auto; display: block;">
+    </div>
+    -->
+    <!-- RSS News Ticker Container -->
+    <div id="rss-container">
         <marquee behavior="scroll" direction="left" scrollamount="6" id="rss-content"></marquee>
     </div>
 
