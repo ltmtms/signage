@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merged Bus ETA Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 2px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            font-size: 16px;
+        }
+        .current-time {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 2pt;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #1155cc;
+            color: white;
+            font-size: 18px;
+        }
+        td {
+            font-size: 16px;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 15%; }
+        th:nth-child(2), td:nth-child(2) { width: 30%; }
+        th:nth-child(3), td:nth-child(3) { width: 35%; }
+        th:nth-child(4), td:nth-child(4) { width: 20%; }
+        @media (max-width: 600px) {
+            th, td { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="current-time" id="current-time">Current Time: </div>
+    <table id="bus-eta-table">
+        <thead>
+            <tr>
+                <th>巴士號碼</th>
+                <th>目的地</th>
+                <th>尚餘到站時間</th>
+                <th>備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        let currentETATimes = [];
+        let updateInterval; // Variable to store the interval for updating ETA
+
+        async function fetchBusETA() {
+            const urls = [
+            'https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/942E95B4336BDFA7',
+            'https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/9A16E73DC0B9AF6C',
+            'https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/29740CCBBD82FC33',
+            'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001652/A28',
+            'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001652/606',
+            'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001652/606A',
+            'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001652/E22P',
+            'https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/001652/N26'
+            ];
+
+            const allData = [];
+
+            try {
+                // Fetch data from all URLs concurrently
+                const responses = await Promise.all(urls.map(url => fetch(url)));
+
+                // Process each response
+                for (const response of responses) {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    allData.push(...data.data); // Merge data arrays
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return; // Exit if there's an error
+            }
+
+            // Keep only one of each duplicate based on route and ETA
+            const uniqueData = [];
+            const seen = new Set();
+
+            allData.forEach(bus => {
+                const eta = bus.eta ? new Date(bus.eta) : null;
+                if (eta) {
+                    const identifier = `${bus.route}-${eta.toISOString()}`; // Make sure to use ISO string for consistency
+                    if (!seen.has(identifier)) {
+                        seen.add(identifier);
+                        uniqueData.push(bus);
+                    }
+                }
+            });
+
+            // Sort the unique data by ETA
+            uniqueData.sort((a, b) => {
+                const etaA = a.eta ? new Date(a.eta) : Infinity;
+                const etaB = b.eta ? new Date(b.eta) : Infinity;
+                return etaA - etaB;
+            });
+
+            const tableBody = document.getElementById('bus-eta-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // Clear existing data
+            currentETATimes = []; // Reset ETA times
+
+            uniqueData.forEach(bus => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = bus.route;
+                row.insertCell(1).textContent = bus.dest_tc;
+
+                const eta = bus.eta ? new Date(bus.eta) : null;
+                const now = new Date();
+                const timeLeft = eta ? Math.max(0, Math.floor((eta - now) / 1000)) : null;
+
+                const minutes = timeLeft !== null ? Math.floor(timeLeft / 60) : null;
+                const seconds = timeLeft !== null ? timeLeft % 60 : null;
+
+                row.insertCell(2).textContent = timeLeft !== null ? (timeLeft > 0 ? `${minutes} min ${seconds} sec` : 'Arrived') : 'N/A';
+                row.insertCell(3).textContent = bus.rmk_tc || '';
+
+                // Store the ETA time for later updates
+                currentETATimes.push(timeLeft);
+            });
+
+            // If this is the first fetch, start the ETA update interval
+            if (!updateInterval) {
+                startETAUpdate();
+            }
+        }
+
+        function startETAUpdate() {
+            updateInterval = setInterval(updateETATimes, 5000); // Update ETA every 5 seconds
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const currentTimeElement = document.getElementById('current-time');
+            currentTimeElement.textContent = `目前時間: ${now.toLocaleTimeString()}`;
+        }
+
+        function updateETATimes() {
+            const tableBody = document.getElementById('bus-eta-table').getElementsByTagName('tbody')[0];
+            const rows = tableBody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const etaCell = rows[i].cells[2];
+                const timeLeft = currentETATimes[i];
+
+                if (timeLeft !== null) {
+                    currentETATimes[i] = Math.max(0, timeLeft - 5); // Decrement by 5 seconds
+                    const updatedTimeLeft = currentETATimes[i];
+                    const minutes = Math.floor(updatedTimeLeft / 60);
+                    const seconds = updatedTimeLeft % 60;
+
+                    etaCell.textContent = updatedTimeLeft > 0 ? `${minutes} min ${seconds} sec` : 'Arrived';
+                }
+            }
+        }
+
+        // Initial fetch and time update
+        fetchBusETA();
+        updateCurrentTime();
+
+        // Set interval for refreshing data every 30 seconds
+        setInterval(async () => {
+            await fetchBusETA();
+            updateCurrentTime();
+        }, 30000);
+
+        // Update current time every second
+        setInterval(updateCurrentTime, 1000);
+    </script>
+</body>
+</html>
