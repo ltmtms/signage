@@ -20,6 +20,6 @@ This project provides a dynamic, real-time electronic display board designed for
 To run this project locally, simply clone the repository and open the `index.html` file in your web browser.
 
 ```bash
-git clone [https://github.com/ltmtms/signage]
+git clone https://github.com/ltmtms/signage
 cd signage
 open index.html
