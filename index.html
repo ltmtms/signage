@@ -457,7 +457,7 @@
                 const items = xmlDoc.getElementsByTagName('item');
 
                 // Initial religious quote followed by RTHK local news
-                let newsText = '望德不叫人蒙羞，因為天主的愛，藉著所賜與我們的聖神，已傾注在我們心中了。——羅馬書5:5 || 香港電台本地新聞：';
+                let newsText = '香港電台本地新聞：';
                 for (let i = 0; i < items.length; i++) {
                     const title = items[i].getElementsByTagName('title')[0].textContent;
                     newsText += title + ' || '; // Append each news title
